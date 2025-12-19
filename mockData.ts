@@ -166,4 +166,17 @@ function generateTracks(count: number): Track[] {
 }
 
 // Generate 1200 tracks
-export const TRACKS: Track[] = generateTracks(1200);
+export const TRACKS: Track[] = [
+  {
+    id: '1',
+    title: '测试音轨',
+    artist: '示例',
+    cover: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=400&q=80',
+    // 使用这个 SoundHelix 的测试链接，或者你自己上传到 public 文件夹的音频
+    url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', 
+    style: 'Electronic',
+    type: 'FULL',
+    duration: 372,
+    description: '测试音频'
+  },
+  // ...
