@@ -1,0 +1,7 @@
+{
+  "name": "MuseFlow: Professional BGM Composer's Library",
+  "description": "An elite BGM discovery app for documentary and vlog creators, featuring AI-driven visual music matching, semantic search, and styled music modules.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
