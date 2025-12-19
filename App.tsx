@@ -132,53 +132,61 @@ export default function App() {
   }, [prefs]);
 
   // Audio Playback Lifecycle
-  useEffect(() => {
+ useEffect(() => {
+    // 1. 初始化 Audio 对象
     if (!audioRef.current) {
       audioRef.current = new Audio();
       
+      // 允许跨域 (解决部分 CORS 问题)
+      audioRef.current.crossOrigin = "anonymous"; 
+
       audioRef.current.onended = () => {
         if (activeView === 'discovery') handleNextDiscovery();
         else setIsPlaying(false);
       };
       
+      // 💡 关键修改：详细的错误捕捉
       audioRef.current.onerror = (e) => {
-        // Correctly handle MediaError object attached to the target
-        if (typeof e === 'string') {
-          console.error(`Audio Playback Error: ${e}`);
-        } else {
-          const target = e.target as HTMLAudioElement;
-          const error = target?.error;
-          if (error) {
-            console.error(`Audio Playback Error. Code: ${error.code}, Message: ${error.message}`);
-            // Code 4 = MEDIA_ERR_SRC_NOT_SUPPORTED
-          } else {
-            console.error("Unknown Audio Error occurred", e);
-          }
-        }
+        const target = e.target as HTMLAudioElement;
+        const err = target.error;
+        console.error("音频播放失败:", {
+            code: err?.code,
+            message: err?.message,
+            src: target.src
+        });
+        // code 2: 网络错误, code 3: 解码错误, code 4: 资源不支持(404等)
         setIsPlaying(false);
       };
     }
     
+    const audio = audioRef.current;
+
     if (currentTrack) {
-      if (audioRef.current.src !== currentTrack.url) {
-        audioRef.current.src = currentTrack.url;
-        audioRef.current.load(); // Explicitly load the new source
+      // 只有当 URL 真正改变时才重新加载，避免卡顿
+      if (audio.src !== currentTrack.url) {
+        audio.src = currentTrack.url;
+        // 注意：不要立即调用 load()，play() 会自动处理
       }
-      audioRef.current.volume = volume;
+      audio.volume = volume;
       
       if (isPlaying) {
-        const playPromise = audioRef.current.play();
+        // 💡 关键修改：处理播放 Promise，避免报错中断 UI
+        const playPromise = audio.play();
         if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.warn("Playback prevented by browser or error:", e);
-            setIsPlaying(false);
-          });
+          playPromise
+            .then(() => {
+                // 播放成功
+            })
+            .catch(e => {
+              console.warn("浏览器阻止了自动播放，或者资源无法加载:", e);
+              setIsPlaying(false); // 回退 UI 状态
+            });
         }
       } else {
-        audioRef.current.pause();
+        audio.pause();
       }
     }
-  }, [currentTrack, isPlaying, volume]);
+  }, [currentTrack, isPlaying, volume, activeView]); // 添加 activeView 到依赖
 
   // States
   const [searchQuery, setSearchQuery] = useState('');
